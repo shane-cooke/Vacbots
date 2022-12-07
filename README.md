@@ -26,10 +26,3 @@
 https://drive.google.com/file/d/1ptZjHOj6Vc2Hojr6ktPRRTEvvw9Xi2s_/view?usp=sharing
 
 ---
-
-## Note about Target and Non-Target files
-
-I was having massive trouble at the start of this project getting the ASTRA application to
-automatically find the vacuumworld `.jar` file, and had to add it manually myself. I thought
-it would be best to submit a version of my project with the target folder and a version
-without the target folder because of this.
