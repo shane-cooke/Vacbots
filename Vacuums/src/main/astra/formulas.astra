@@ -1,0 +1,10 @@
+agent formulas {
+    types pp {
+        formula area(string);
+        formula instruction(string);
+    }
+
+    module Console console; 
+    module System system;
+	module EIS ei;
+}

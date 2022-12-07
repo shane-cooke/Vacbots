@@ -1,0 +1,236 @@
+agent Decco extends formulas {
+
+    module Console C;
+    module System S;
+	module EIS ei;
+    module MyModule mod;
+    module MyModule2 mod2;
+    module MyModule3 mod3;
+
+    types decco_ont {
+        formula decco(string);
+        formula harry(string);
+        formula henry(string);
+        formula lloyd(string);
+        formula job(string);
+        formula position(string);
+        formula peak(string);
+    }
+
+    initial decco("none");
+    initial harry("none");
+    initial henry("none");
+    initial lloyd("none");
+
+    rule +!main([string name]) {
+        //C.println("Hi, I'm working!");
+		ei.launch("vw","dependency/vacuumworld-1.2.0.jar");
+		ei.join();
+		ei.link("Decco");
+	}
+
+    initial !init();
+
+    rule +!init() {
+        wait(job("top") | job("bottom"));
+        wait(position("top") | position("bottom"));
+        wait(harry("top") | harry("bottom"));
+        wait(henry("top") | henry("bottom"));
+        wait(lloyd("top") | lloyd("bottom"));
+
+        while(job("top")) {
+            if(position("top")) {
+                ei.light("on");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else if(peak("empty")){
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                } else if(peak("dust")){
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                }
+            }
+            if(position("bottom")) {
+                ei.light("off");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else {
+                    ei.move("north", 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                }
+            }
+        }
+        while(job("bottom")) {
+            if(position("bottom")) {
+                ei.light("on");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else if(peak("empty")) {
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else if(peak("empty")) {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                } else if(peak("dust")) {
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else if(peak("dust")) {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                }
+            }
+            if(position("top")) {
+                ei.light("off");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else {
+                    ei.move("south", 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                }
+            }
+        }
+    }
+
+    rule +$ei.event(location(int x, int y)) {
+        if(y <= 3) {
+            send(inform, "Decco", area("top"));
+        } else if(y >= 4) {
+            send(inform, "Decco", area("bottom"));
+        }
+    }
+
+    rule @message(inform, string sender, area(string X)) {
+
+        if(sender == "Decco") {
+            C.println(sender + " will work in the " + X + " half of the grid.");
+            +decco(X);
+            +job(X);
+        }
+        wait(job("top") | job("bottom"));
+        if(sender == "Harry") {
+            if(X == "top") {
+                if(decco("top")) {
+                    -harry("none");
+                    +harry("bottom");
+                    send(inform, "Harry", instruction("bottom"));
+                } else if(decco("bottom")) {
+                    -harry("none");
+                    +harry("top");
+                    send(inform, "Harry", instruction("top"));
+                }
+            } else if(X == "bottom") {
+                if(decco("bottom")) {
+                    -harry("none");
+                    +harry("top");
+                    send(inform, "Harry", instruction("top"));
+                } else if(decco("top")) {
+                    -harry("none");
+                    +harry("bottom");
+                    send(inform, "Harry", instruction("bottom"));
+                }
+            }
+        } else if(sender == "Henry") {
+            if(X == "top") {
+                if(lloyd("top")) {
+                    -henry("none");
+                    +henry("bottom");
+                    send(inform, "Henry", instruction("bottom"));
+                } else if(lloyd("bottom")) {
+                    -henry("none");
+                    +henry("top");
+                    send(inform, "Henry", instruction("top"));
+                }
+            } else if(X == "bottom") {
+                if(lloyd("bottom")) {
+                    -henry("none");
+                    +henry("top");
+                    send(inform, "Henry", instruction("top"));
+                } else if(lloyd("top")) {
+                    -henry("none");
+                    +henry("bottom");
+                    send(inform, "Henry", instruction("bottom"));
+                }
+            }
+        } else if(sender == "Lloyd") {
+            if(X == "top") {
+                if(henry("top")) {
+                    -lloyd("none");
+                    +lloyd("bottom");
+                    send(inform, "Lloyd", instruction("bottom"));
+                } else {
+                    -lloyd("none");
+                    +lloyd("top");
+                    send(inform, "Lloyd", instruction("top"));
+                }
+            } else if(X == "bottom") {
+                if(henry("bottom")) {
+                    -lloyd("none");
+                    +lloyd("top");
+                    send(inform, "Lloyd", instruction("top"));
+                } else {
+                    -lloyd("none");
+                    +lloyd("bottom");
+                    send(inform, "Lloyd", instruction("bottom"));
+                }
+            }
+        }
+    }
+
+    rule +$ei.event(square("forward", string content)) : ei.location(int s, int d) {
+        -+peak(content);
+
+        if(d <= 3) {
+            -+position("top");
+            C.println("PTOP");
+        }
+        if(d >= 4) {
+            -+position("bottom");
+            C.println("PBOT");
+        }
+    }
+}

@@ -1,0 +1,152 @@
+agent Lloyd extends formulas {
+
+    module Console C;
+    module System S;
+	module EIS ei;
+    module MyModule mod;
+    module MyModule2 mod2;
+    module MyModule3 mod3;
+
+    types lloyd_ont {
+        formula job(string);
+        formula position(string);
+        formula peak(string);
+    }
+
+    rule +!main([string name]) {
+        //C.println("Hi, I'm working!");
+		ei.launch("vw","dependency/vacuumworld-1.2.0.jar");
+		ei.join();
+		ei.link("Lloyd");
+	}
+
+    initial !init();
+
+    rule +!init() {
+        wait(job("top") | job("bottom"));
+        wait(position("top") | position("bottom"));
+
+        while(job("top")) {
+            if(position("top")) {
+                ei.light("on");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else if(peak("empty")){
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                } else if(peak("dust")){
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                }
+            }
+            if(position("bottom")) {
+                ei.light("off");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else {
+                    ei.move("north", 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                }
+            }
+        }
+        while(job("bottom")) {
+            if(position("bottom")) {
+                ei.light("on");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else if(peak("empty")) {
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else if(peak("empty")) {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                } else if(peak("dust")) {
+                    string turn = mod.randomTurn();
+                    int rand = mod3.randomInt();
+                    if(rand == 6) {
+                        C.println("RANDOM");
+                        ei.move(turn, 1);
+                        mod2.pauseWait(1000);
+                    } else if(peak("dust")) {
+                        ei.move("forward", 1);
+                        mod2.pauseWait(1000);
+                        ei.clean();
+                    }
+                }
+            }
+            if(position("top")) {
+                ei.light("off");
+                if(peak("obstacle") | peak("vac")) {
+                    string turn = mod.randomTurn();
+                    ei.move(turn, 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                } else {
+                    ei.move("south", 1);
+                    mod2.pauseWait(1000);
+                    ei.clean();
+                }
+            }
+        }
+    }
+
+    rule +$ei.event(location(int x, int y)) {
+        if(y <= 3) {
+            send(inform, "Decco", area("top"));
+        } else if(y >= 4) {
+            send(inform, "Decco", area("bottom"));
+        }
+    }
+
+    rule @message(inform, string sender, instruction(string Y)) {
+        C.println(sender + " has told me I will work in the " + Y + " half of the grid.");
+        +job(Y);
+    }
+
+    rule +$ei.event(square("forward", string content)) : ei.location(int s, int d) {
+        -+peak(content);
+
+        if(d <= 3) {
+            -+position("top");
+            C.println("PTOP");
+        }
+        if(d >= 4) {
+            -+position("bottom");
+            C.println("PBOT");
+        }
+    }
+}

@@ -1,0 +1,28 @@
+agent Main {
+    module Console C;
+    module System S;
+	module EIS ei;
+    module Debug debug;
+	module MyModule mod;
+
+	rule +!main(list args) {
+		ei.launch("vw","dependency/vacuumworld-1.2.0.jar");
+		ei.init([generation("no")]);
+		ei.join();
+		ei.startEnv();
+
+		list E = ei.freeEntities();
+		forall(string ent : E) {
+			C.println("E="+E);
+		}
+
+		S.createAgent("Decco", "Decco");
+		S.setMainGoal("Decco", ["Decco"]);
+		S.createAgent("Lloyd", "Lloyd");
+		S.setMainGoal("Lloyd", ["Lloyd"]);
+		S.createAgent("Harry", "Harry");
+		S.setMainGoal("Harry", ["Harry"]);
+		S.createAgent("Henry", "Henry");
+		S.setMainGoal("Henry", ["Henry"]);
+	}
+}
